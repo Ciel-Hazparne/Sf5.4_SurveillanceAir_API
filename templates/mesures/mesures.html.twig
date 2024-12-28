@@ -1,0 +1,312 @@
+{% extends 'base.html.twig' %}
+{% block title %}Mesures{% endblock %}
+
+{% block body %}
+    <div class="alert alert-dismissible alert-secondary mt-5">
+        <h4>Mesures comprises entre deux dates</h4>
+        {#        {{ form_start(form) }} #}
+        {#        <div class="form-row align-items-end"> #}
+        {#            <div class="col"> {{ form_row(form.min) }} </div> #}
+        {#            <div class="col"> {{ form_row(form.max) }} </div> #}
+        <form role="form" method="get">
+
+            <div class="form-group">
+                <!-- Champ pour la date de début -->
+                <label class="form-label mt-4" for="InputDate">Date de Début</label>
+                <input id="DateMin" class="form-control" name="DateMin" type="date"
+                       value="{{ app.request.query.get('DateMin') }}" placeholder="Enter Date">
+
+                <!-- Champ pour la date de fin -->
+                <label class="form-label mt-4" for="InputDate">Date de Fin</label>
+                <input id="DateMax" class="form-control" name="DateMax" type="date"
+                       value="{{ app.request.query.get('DateMax') }}" placeholder="Enter Date">
+                <!-- app.request.query.get -> Récupere les valeurs précédemment saisies et les afficher à nouveau dans les champs de formulaire. -->
+            </div>
+
+            <div class="container text-center">
+                <div class="row align-items-start">
+                    <div class="col"></div>
+                    <div class="col">
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <!-- Bouton pour afficher les données -->
+                            <input type="submit" name="Submit" class="btn btn-success btn-lg" value="Afficher">
+                        {% endif %}
+                    </div>
+
+                    <div class="col">
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <!-- Bouton pour supprimer les données -->
+                            <input type="submit" name="DeleteSpe" class="btn btn-danger btn-lg" value="Supprimer"
+                                   onclick="confirmDelete()">
+                        {% endif %}
+                    </div>
+                    <div class="col">
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <!-- Bouton pour réinitialiser les données -->
+                            <a style="text-decoration:none" class="btn btn-primary btn-lg" href="{{ path('mesures') }}">Reset</a>
+                        {% endif %}
+                    </div>
+                    <div class="col"></div>
+                </div>
+            </div>
+        </form>
+
+        <script>
+            function confirmDelete() {
+                // Demande de confirmation avant de supprimer les données
+                var result = confirm("Êtes-vous sûr de vouloir supprimer ces données ?");
+                if (result) {
+                    return true;
+                } else {
+                    // Annulation de la suppression si l'utilisateur n'a pas confirmé
+                    event.preventDefault();
+                    return false;
+                }
+            }
+        </script>
+        {#            {{ form_end(form) }} #}
+
+    </div>
+
+    <div>
+        <table id="real-time-table" class="table table-striped">
+            <tr>
+                <th style="text-align: center">
+                        Dernières valeurs
+                </th>
+
+                <th style="text-align: center">
+                    {% if CO2 is not empty %}
+                        CO2 : {{ CO2|first['data'] }} ppm
+                    {% else %}
+                        CO2 : Aucune
+                    {% endif %}
+                </th>
+
+
+                <th style="text-align: center">
+                    {% if COV is not empty %}
+                        COV : {{ COV|first['data'] }} ppm
+                    {% else %}
+                        COV : Aucune
+                    {% endif %}
+                </th>
+
+                <th style="text-align: center">
+                    {% if Hygrometrie is not empty %}
+                        Hygrometrie : {{ Hygrometrie|first['data'] }} %
+                    {% else %}
+                        Hygrometrie : Aucune
+                    {% endif %}
+                </th>
+
+                <th style="text-align: center">
+                    {% if Temperature is not empty %}
+                        Temperature : {{ Temperature|first['data'] }} °C
+                    {% else %}
+                        Temperature : Aucune
+                    {% endif %}
+                </th>
+            </tr>
+        </table>
+    </div>
+
+
+
+    <div class="accordion" id="accordionExample">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseOne"
+                    aria-expanded="false" aria-controls="collapseOne">
+                CO2
+            </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+             data-bs-parent="#accordionExample">
+            <div class="accordion-body">
+                {% if CO2 %}
+                    <table id="CO2" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>DATA</th>
+                            <th>DATE</th>
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <th>Actions</th>
+                            {% endif %}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for CO2s in CO2 %}
+                            <tr>
+                                <td>{{ CO2s.data }} ppm</td>
+                                <td>{{ CO2s.date }}</td>
+                                {% if is_granted('ROLE_ADMIN') %}
+                                    <td>
+                                        {% if CO2s.id is not null and CO2s.id|length > 0 %}
+                                            <form method="post" action="{{ path('mesures_delete_CO2', {id: CO2s.id}) }}"
+                                                  style="display: inline-block"
+                                                  onsubmit="return confirm('Etes-vous sûr de supprimer la valeur {{ CO2s.data }} du {{ CO2s.date }} ?')">
+                                                <input type="hidden" name="_method" value="DELETE">
+                                                <button class="btn btn-danger">Supprimer</button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                            </tr> {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>Aucune mesures CO2</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingTwo">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                COV
+            </button>
+        </h2>
+        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
+             data-bs-parent="#accordionExample">
+            <div class="accordion-body">
+                {% if COV %}
+                    <table id="Humidite" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>DATA</th>
+                            <th>DATE</th>
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <th>Actions</th>
+                            {% endif %}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for COVs in COV %}
+                            <tr>
+                                <td>{{ COVs.data }} %</td>
+                                <td>{{ COVs.date }}</td>
+                                <td>
+                                    {% if is_granted('ROLE_ADMIN') %}
+                                        {% if COVs.id is not null and COVs.id|length > 0 %}
+                                            <form method="post"
+                                                  action="{{ path('mesures_delete_COV', {id: COVs.id}) }}"
+                                                  style="display: inline-block"
+                                                  onsubmit="return confirm('Etes-vous sûr de supprimer la valeur {{ COVs.data }} du {{ COVs.date }} ?')">
+                                                <input type="hidden" name="_method" value="DELETE">
+                                                <button class="btn btn-danger">Supprimer</button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
+
+                                </td>
+                            </tr> {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>Aucune mesures Humidité</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingThree">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Hygromètrie
+            </button>
+        </h2>
+        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
+             data-bs-parent="#accordionExample">
+            <div class="accordion-body">
+                {% if Hygrometrie %}
+                    <table id="Hygrometrie" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>DATA</th>
+                            <th>DATE</th>
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <th>Actions</th>
+                            {% endif %}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for Hygrometries in Hygrometrie %}
+                            <tr>
+                                <td>{{ Hygrometries.data }} %</td>
+                                <td>{{ Hygrometries.date }}</td>
+                                <td>
+                                    {% if is_granted('ROLE_ADMIN') %}
+                                        {% if Hygrometries.id is not null and Hygrometries.id|length > 0 %}
+                                            <form method="post"
+                                                  action="{{ path('mesures_delete_hygrometrie', {id: Hygrometries.id}) }}"
+                                                  style="display: inline-block"
+                                                  onsubmit="return confirm('Etes-vous sûr de supprimer la valeur {{ Hygrometries.data }} du {{ Hygrometries.date }} ?')">
+                                                <input type="hidden" name="_method" value="DELETE">
+                                                <button class="btn btn-danger">Supprimer</button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr> {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>Aucune mesures Hygromètrie</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingFour">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                Température
+            </button>
+        </h2>
+        <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour"
+             data-bs-parent="#accordionExample">
+            <div class="accordion-body">
+                {% if Temperature %}
+                    <table id="Temperature" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>DATA</th>
+                            <th>DATE</th>
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <th>Actions</th>
+                            {% endif %}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for Temperatures in Temperature %}
+                            <tr>
+                                <td>{{ Temperatures.data }} °C</td>
+                                <td>{{ Temperatures.date }}</td>
+                                <td>
+                                    {% if is_granted('ROLE_ADMIN') %}
+                                        {% if Temperatures.id is not null and Temperatures.id|length > 0 %}
+                                            <form method="post"
+                                                  action="{{ path('mesures_delete_temperature', {id: Temperatures.id}) }}"
+                                                  style="display: inline-block"
+                                                  onsubmit="return confirm('Etes-vous sûr de supprimer la valeur {{ Temperatures.data }} du {{ Temperatures.date }}?')">
+                                                <input type="hidden" name="_method" value="DELETE">
+                                                <button class="btn btn-danger">Supprimer</button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
+
+                                </td>
+                            </tr> {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>Aucune mesures Température</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

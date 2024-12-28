@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion{% endblock %}
+{% block body %}
+    <h2><b>Veuillez vous authentifier</b></h2>
+    {% if error %}
+        <div class="alert alert-danger" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+    {% endif %}
+    <form action="{{ path('security_login') }}" method="post">
+        <div class="form-group">
+            <input placeholder="Adresse email..." requied name="_username" value="{{ lastUsername }}"
+                   type="text" class="form-control">
+        </div>
+        <div class="form-group">
+            <input placeholder="Mode de passe..." requied name="_password"
+                   type="password" class="form-control">
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-success">Connexion</button>
+            &nbsp;&nbsp;&nbsp;&nbsp; <!-- Espace entre les boutons -->
+            <a style="text-decoration:none" class="btn btn-danger" href="{{ path('home') }}">Retour</a>
+        </div>
+    </form>
+    <div class="card border-primary mt-3 mb-3">
+        <div class="card-header">Identifiant stocké dans la BDD</div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th scope="col">Email</th>
+                    <th scope="col">Mot de passe</th>
+                    <th scope="col">Rôle</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>admin@admin.admin</td>
+                    <td>snir64240</td>
+                    <td>ROLE_ADMIN</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
